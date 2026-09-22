@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A3 IPA Keyboard</title>
+<style>
+  :root {
+    --page-bg: #f7f5f0;
+    --panel-bg: #ffffff;
+    --text: #232323;
+    --vowel-bg: #cfe8e4;
+    --vowel-bg-hover: #b9dcd6;
+    --consonant-bg: #f6ddc0;
+    --consonant-bg-hover: #eecba1;
+    --key-text: #1f2a28;
+    --util-bg: #e7e4dd;
+    --util-bg-hover: #dbd7cd;
+    --stress-bg: #cfe0f2;
+    --stress-bg-hover: #b9d2ea;
+    --clear-bg: #efe1e1;
+    --clear-bg-hover: #e4cccc;
+    --clear-text: #6b3a3a;
+    --copy-bg: #2f7d5f;
+    --copy-bg-hover: #266a4f;
+    --copy-text: #ffffff;
+    --border: #d8d4c9;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px 16px 40px;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Charis SIL", "Doulos SIL", "DejaVu Sans", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    color: #4a4a4a;
+    letter-spacing: 0.02em;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  #output {
+    width: 100%;
+    min-height: 80px;
+    font-size: 30px;
+    font-family: "Segoe UI", "Charis SIL", "Doulos SIL", "DejaVu Sans", sans-serif;
+    padding: 16px 18px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    background: var(--panel-bg);
+    color: var(--text);
+    resize: vertical;
+    line-height: 1.4;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  #output:focus {
+    outline: none;
+    border-color: #9cbdb5;
+  }
+
+  .grid {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .key {
+    min-height: 48px;
+    min-width: 48px;
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    font-size: 22px;
+    font-family: "Segoe UI", "Charis SIL", "Doulos SIL", "DejaVu Sans", sans-serif;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--key-text);
+    transition: background 0.1s ease, transform 0.05s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  .key:active {
+    transform: translateY(1px);
+  }
+
+  .key.vowel {
+    background: var(--vowel-bg);
+  }
+  .key.vowel:hover {
+    background: var(--vowel-bg-hover);
+  }
+
+  .key.consonant {
+    background: var(--consonant-bg);
+  }
+  .key.consonant:hover {
+    background: var(--consonant-bg-hover);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0;
+  }
+
+  .utility-row {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .util {
+    min-height: 52px;
+    padding: 10px 18px;
+    font-size: 18px;
+    font-family: "Segoe UI", "Charis SIL", "Doulos SIL", "DejaVu Sans", sans-serif;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--util-bg);
+    color: var(--key-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    transition: background 0.1s ease, transform 0.05s ease;
+  }
+  .util:hover {
+    background: var(--util-bg-hover);
+  }
+  .util:active {
+    transform: translateY(1px);
+  }
+
+  .util.stress {
+    background: var(--stress-bg);
+  }
+  .util.stress:hover {
+    background: var(--stress-bg-hover);
+  }
+
+  .util.space {
+    flex: 0 0 auto;
+    min-width: 110px;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .util.clear {
+    background: var(--clear-bg);
+    color: var(--clear-text);
+    font-size: 16px;
+  }
+  .util.clear:hover {
+    background: var(--clear-bg-hover);
+  }
+
+  .util.copy {
+    background: var(--copy-bg);
+    color: var(--copy-text);
+    font-weight: 600;
+    min-width: 110px;
+  }
+  .util.copy:hover {
+    background: var(--copy-bg-hover);
+  }
+  .util.copy.copied {
+    background: #1f5e46;
+  }
+
+  .reminder {
+    margin-top: 18px;
+    font-size: 13px;
+    color: #7a7a72;
+    text-align: center;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 480px) {
+    #output { font-size: 26px; }
+    .key { font-size: 19px; padding: 8px 10px; }
+    .row { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+  <h1>A3 IPA Keyboard</h1>
+  <div class="wrap">
+    <textarea id="output" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="utility-row">
+      <button class="util stress" data-token="ˈ">ˈ stress</button>
+      <button class="util space" data-token=" ">space</button>
+      <button class="util backspace" id="backspaceBtn">⌫</button>
+      <button class="util clear" id="clearBtn">Clear</button>
+      <div class="spacer"></div>
+      <button class="util copy" id="copyBtn">Copy</button>
+    </div>
+
+    <div class="reminder">one ˈ per word &middot; no r after a vowel &middot; weak syllable &rarr; ə &middot; A copies the criminal, B obeys the law</div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Rows mirror the lecturer's chart exactly, left to right, top to bottom.
+  var vowelRows = [
+    ["iː", "ɪ", "ʊ", "uː", "ɪə", "eɪ"],
+    ["e", "ə", "ɜː", "ɔː", "ʊə", "ɔɪ", "əʊ"],
+    ["æ", "ʌ", "ɑː", "ɒ", "eə", "aɪ", "aʊ"]
+  ];
+
+  var consonantRows = [
+    ["p", "b", "t", "d", "tʃ", "dʒ", "k", "g"],
+    ["f", "v", "θ", "ð", "s", "z", "ʃ", "ʒ"],
+    ["m", "n", "ŋ", "h", "l", "r", "w", "j"]
+  ];
+
+  // Two-character tokens that must be deleted as a single unit on backspace.
+  var TWO_CHAR_TOKENS = [
+    "tʃ", "dʒ", "iː", "uː", "ɜː", "ɔː", "ɑː",
+    "ɪə", "eɪ", "ʊə", "ɔɪ", "əʊ", "eə", "aɪ", "aʊ"
+  ];
+
+  var grid = document.getElementById("grid");
+  var output = document.getElementById("output");
+
+  function buildRow(symbols, cssClass) {
+    var row = document.createElement("div");
+    row.className = "row";
+    symbols.forEach(function (sym) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "key " + cssClass;
+      btn.textContent = sym;
+      btn.setAttribute("data-token", sym);
+      attachInsert(btn, sym);
+      row.appendChild(btn);
+    });
+    return row;
+  }
+
+  vowelRows.forEach(function (r) {
+    grid.appendChild(buildRow(r, "vowel"));
+  });
+
+  var divider = document.createElement("div");
+  divider.className = "divider";
+  grid.appendChild(divider);
+
+  consonantRows.forEach(function (r) {
+    grid.appendChild(buildRow(r, "consonant"));
+  });
+
+  function insertAtCaret(token) {
+    var start = output.selectionStart;
+    var end = output.selectionEnd;
+    if (typeof start !== "number" || typeof end !== "number") {
+      // No known caret (box never focused yet) — append to the end.
+      start = end = output.value.length;
+    }
+    var text = output.value;
+    output.value = text.slice(0, start) + token + text.slice(end);
+    var newPos = start + token.length;
+    output.focus();
+    output.setSelectionRange(newPos, newPos);
+  }
+
+  function attachInsert(el, token) {
+    // Keep the textarea's caret/focus untouched when a key is pressed.
+    el.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    el.addEventListener("click", function () { insertAtCaret(token); });
+  }
+
+  // Utility row buttons that use the same insert behaviour (stress, space).
+  var simpleInsertButtons = document.querySelectorAll(".util[data-token]");
+  simpleInsertButtons.forEach(function (btn) {
+    var token = btn.getAttribute("data-token");
+    attachInsert(btn, token);
+  });
+
+  function doBackspace() {
+    var start = output.selectionStart;
+    var end = output.selectionEnd;
+    var text = output.value;
+
+    if (typeof start !== "number" || typeof end !== "number") {
+      start = end = text.length;
+    }
+
+    if (start !== end) {
+      // There is a selection — delete just that.
+      output.value = text.slice(0, start) + text.slice(end);
+      output.focus();
+      output.setSelectionRange(start, start);
+      return;
+    }
+
+    if (start === 0) {
+      output.focus();
+      return;
+    }
+
+    var before = text.slice(0, start);
+    var deleteCount = 1;
+    for (var i = 0; i < TWO_CHAR_TOKENS.length; i++) {
+      var tok = TWO_CHAR_TOKENS[i];
+      if (before.length >= tok.length && before.slice(-tok.length) === tok) {
+        deleteCount = tok.length;
+        break;
+      }
+    }
+
+    var newStart = start - deleteCount;
+    output.value = text.slice(0, newStart) + text.slice(start);
+    output.focus();
+    output.setSelectionRange(newStart, newStart);
+  }
+
+  var backspaceBtn = document.getElementById("backspaceBtn");
+  backspaceBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  backspaceBtn.addEventListener("click", doBackspace);
+
+  var clearBtn = document.getElementById("clearBtn");
+  clearBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  clearBtn.addEventListener("click", function () {
+    output.value = "";
+    output.focus();
+  });
+
+  var copyBtn = document.getElementById("copyBtn");
+  copyBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  copyBtn.addEventListener("click", function () {
+    var text = output.value;
+
+    function showCopied() {
+      var original = "Copy";
+      copyBtn.textContent = "Copied ✓";
+      copyBtn.classList.add("copied");
+      setTimeout(function () {
+        copyBtn.textContent = original;
+        copyBtn.classList.remove("copied");
+      }, 1200);
+    }
+
+    function fallbackCopy() {
+      var restoreStart = output.selectionStart;
+      var restoreEnd = output.selectionEnd;
+      output.focus();
+      output.select();
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        /* clipboard unavailable — nothing more we can do offline */
+      }
+      if (typeof restoreStart === "number") {
+        output.setSelectionRange(restoreStart, restoreEnd);
+      }
+      showCopied();
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(showCopied, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  });
+
+  // Typing directly in the box keeps working — no listeners block default input.
+})();
+</script>
+</body>
+</html>

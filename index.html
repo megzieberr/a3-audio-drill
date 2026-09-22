@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A3 Audio Drill</title>
+<style>
+  :root {
+    --ink:#22202b; --muted:#6b6678; --line:#e3dff0; --bg:#faf8ff; --card:#ffffff;
+    --accent:#6d4aa8; --accent-soft:#f1ebff; --ok:#2f7d4f; --warm:#fff6e8; --warmline:#f0d9ae;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:0 0 30vh; background:var(--bg); color:var(--ink);
+         font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; }
+  .wrap { max-width:720px; margin:0 auto; padding:16px; }
+  h1 { font-size:1.3rem; margin:.2rem 0 .3rem; }
+  .sub { color:var(--muted); font-size:.92rem; margin:0 0 1rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:14px; margin:0 0 14px; }
+  .rules { background:var(--warm); border-color:var(--warmline); }
+  .rules h2 { font-size:1rem; margin:0 0 .5rem; }
+  .rules ol { margin:0; padding-left:1.15rem; }
+  .rules li { margin:0 0 .5rem; }
+  .rules b { color:#7a4a12; }
+  .star { margin:.6rem 0 0; font-size:.93rem; color:var(--muted); }
+  details.note { margin-top:.6rem; font-size:.9rem; }
+  details.note summary { cursor:pointer; color:var(--accent); }
+  h2.rh { font-size:1.1rem; margin:1.4rem 0 .5rem; }
+  .item { border-top:1px solid var(--line); padding:12px 0 6px; }
+  .item:first-child { border-top:0; padding-top:2px; }
+  .head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .num { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.85rem; min-width:1.7em; }
+  .word { font-weight:600; font-size:1.05rem; flex:1 1 auto; }
+  button { font:inherit; }
+  .play { background:var(--accent); color:#fff; border:0; border-radius:999px;
+          padding:.42rem 1rem; cursor:pointer; }
+  .play:active { transform:translateY(1px); }
+  .play.mini { background:#fff; color:var(--accent); border:1px solid var(--accent);
+               margin-top:.45rem; font-size:.88rem; padding:.3rem .7rem; }
+  label.f { display:block; margin:.55rem 0 0; font-size:.86rem; color:var(--muted); }
+  input.ipa { width:100%; padding:.5rem .6rem; margin-top:.2rem; border:1px solid var(--line);
+              border-radius:9px; font-size:1.12rem; background:#fff; color:var(--ink); }
+  input.ipa:focus { outline:2px solid var(--accent-soft); border-color:var(--accent); }
+  input.ipa[readonly] { background:#f6f4fb; color:var(--muted); }
+  .memo { margin-top:.6rem; padding:.6rem .7rem; background:var(--accent-soft); border-radius:10px; }
+  .memo .row { display:flex; gap:.5rem; align-items:baseline; flex-wrap:wrap; margin:.15rem 0; }
+  .memo .k { color:var(--muted); min-width:7em; font-size:.85rem; }
+  .memo .v { font-size:1.1rem; }
+  .memo .type { margin-top:.4rem; font-size:.88rem; color:var(--accent); }
+  .memo .tick { color:var(--ok); font-weight:700; }
+  .commit { display:block; width:100%; padding:.75rem; margin:1rem 0 0; border:0;
+            border-radius:11px; background:var(--accent); color:#fff; cursor:pointer; font-size:1rem; }
+  .commit[disabled] { background:#cfc8e2; cursor:default; }
+  .export { display:block; width:100%; padding:.55rem; margin:.75rem 0 0; border:1px solid #b9b0d6;
+    background:#f4f1fb; color:#3d3266; border-radius:8px; font-size:.95rem; cursor:pointer; }
+  .export:hover { background:#e9e3f7; }
+  .done { text-align:center; color:var(--ok); font-size:.9rem; margin-top:.7rem; }
+  .pal { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line);
+         box-shadow:0 -4px 14px rgba(40,25,80,.08); z-index:9; }
+  .pal .inner { max-width:720px; margin:0 auto; padding:6px 10px 8px; max-height:30vh; overflow:auto; }
+  .paltop { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .paltop b { font-size:.8rem; color:var(--muted); font-weight:600; }
+  .toggle { background:none; border:0; color:var(--accent); cursor:pointer; font-size:.85rem; }
+  .palrow { display:flex; gap:6px; align-items:flex-start; margin:.3rem 0; }
+  .pallab { font-size:.72rem; color:var(--muted); min-width:5.4em; padding-top:.35rem; }
+  .palbtns { display:flex; flex-wrap:wrap; gap:5px; flex:1 1 auto; }
+  .sym { min-width:2.1rem; padding:.3rem .35rem; font-size:1.05rem; background:#fff;
+         border:1px solid var(--line); border-radius:8px; cursor:pointer; }
+  .sym:active { background:var(--accent-soft); }
+  .palbody.hidden { display:none; }
+  footer { color:var(--muted); font-size:.82rem; text-align:center; margin:1.4rem 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>A3 audio drill: mispronunciations</h1>
+  <p class="sub">Two rounds of 15. Play each clip as often as you like. Column A is what the
+  speaker said; Column B is the correct dictionary form. <b>Not every word has an error</b>:
+  if nothing is wrong, write the same transcription in both boxes.</p>
+  <p class="sub">Need IPA symbols? <a href="keyboard.html" target="_blank" rel="noopener">Open the IPA keyboard</a> in a new tab, tap a symbol, then paste it here.</p>
+
+  <div class="card rules">
+    <h2>Before you write a single symbol</h2>
+    <ol>
+      <li>Any <b>c, g or s</b> in your transcript: stop and ask, <b>is that the SOUND or the
+          LETTER?</b> There is no c in the IPA (the /k/ sound is always <b>k</b>), /d&#658;/ is
+          never g, and a buzzing s is <b>z</b>.</li>
+      <li><b>No stressed schwa, ever.</b> &#601; is by definition the weak vowel of an unstressed
+          syllable, so a stressed one needs a full vowel: short &#618;, long &#604;&#720; or
+          i&#720;. Every <i>unstressed</i> syllable tends toward &#601;.</li>
+      <li><b>&#618; or &#601;? Rhyme test.</b> If the syllable rhymes with a real word (rin ~ pin,
+          mint ~ mint) it is a real vowel. If you can only shrug &ldquo;uh&rdquo;, it is &#601;.
+          Unstressed and undecidable, &#601; is the safer answer.</li>
+    </ol>
+    <p class="star">&#11088; Your ear is the reliable channel. Write what you <i>heard</i> first,
+    then fix the symbols. Never argue yourself out of your own listening.</p>
+    <details class="note">
+      <summary>About this voice</summary>
+      <p>The drill clips are read by a British neural voice at a slightly slowed rate; the
+      memo&rsquo;s &ldquo;correct form&rdquo; clips are in the earlier voice. Both are British, so the
+      accent matches the dictionary forms you are writing. Judge the <b>error</b>, not the accent: you are marking which sound,
+      syllable or stress is wrong, exactly as in the real recording. This voice keeps the short
+      <b>&#594;</b> (cot, dog) and the long <b>&#593;&#720;</b> (cart, calm) apart, so write down
+      whichever one you actually hear.</p>
+    </details>
+  </div>
+
+  <div id="rounds"></div>
+
+  <footer>ENGV121 &middot; Unit 3 &middot; practice for A3 on Fri 25 Sep &middot; each round's memo
+  unlocks once you commit that round</footer>
+</div>
+
+<div class="pal">
+  <div class="inner">
+    <div class="paltop"><b>IPA palette: tap a symbol to drop it into the last box you touched</b>
+      <button class="toggle" id="palToggle" type="button">hide</button></div>
+    <div class="palbody" id="palBody">
+<div class="palrow"><span class="pallab">Stress, length</span><div class="palbtns"><button type="button" class="sym" data-s="ˈ">ˈ</button><button type="button" class="sym" data-s="ː">ː</button></div></div>
+<div class="palrow"><span class="pallab">Short vowels</span><div class="palbtns"><button type="button" class="sym" data-s="ɪ">ɪ</button><button type="button" class="sym" data-s="e">e</button><button type="button" class="sym" data-s="æ">æ</button><button type="button" class="sym" data-s="ʌ">ʌ</button><button type="button" class="sym" data-s="ɒ">ɒ</button><button type="button" class="sym" data-s="ʊ">ʊ</button><button type="button" class="sym" data-s="ə">ə</button></div></div>
+<div class="palrow"><span class="pallab">Long vowels</span><div class="palbtns"><button type="button" class="sym" data-s="iː">iː</button><button type="button" class="sym" data-s="ɑː">ɑː</button><button type="button" class="sym" data-s="ɔː">ɔː</button><button type="button" class="sym" data-s="uː">uː</button><button type="button" class="sym" data-s="ɜː">ɜː</button></div></div>
+<div class="palrow"><span class="pallab">Diphthongs</span><div class="palbtns"><button type="button" class="sym" data-s="eɪ">eɪ</button><button type="button" class="sym" data-s="aɪ">aɪ</button><button type="button" class="sym" data-s="ɔɪ">ɔɪ</button><button type="button" class="sym" data-s="əʊ">əʊ</button><button type="button" class="sym" data-s="aʊ">aʊ</button><button type="button" class="sym" data-s="ɪə">ɪə</button><button type="button" class="sym" data-s="eə">eə</button><button type="button" class="sym" data-s="ʊə">ʊə</button></div></div>
+<div class="palrow"><span class="pallab">Consonants</span><div class="palbtns"><button type="button" class="sym" data-s="p">p</button><button type="button" class="sym" data-s="b">b</button><button type="button" class="sym" data-s="t">t</button><button type="button" class="sym" data-s="d">d</button><button type="button" class="sym" data-s="k">k</button><button type="button" class="sym" data-s="g">g</button><button type="button" class="sym" data-s="f">f</button><button type="button" class="sym" data-s="v">v</button><button type="button" class="sym" data-s="s">s</button><button type="button" class="sym" data-s="z">z</button><button type="button" class="sym" data-s="h">h</button><button type="button" class="sym" data-s="l">l</button><button type="button" class="sym" data-s="r">r</button><button type="button" class="sym" data-s="m">m</button><button type="button" class="sym" data-s="n">n</button><button type="button" class="sym" data-s="w">w</button><button type="button" class="sym" data-s="j">j</button></div></div>
+<div class="palrow"><span class="pallab">Tricky eight</span><div class="palbtns"><button type="button" class="sym" data-s="ŋ">ŋ</button><button type="button" class="sym" data-s="θ">θ</button><button type="button" class="sym" data-s="ð">ð</button><button type="button" class="sym" data-s="ʃ">ʃ</button><button type="button" class="sym" data-s="ʒ">ʒ</button><button type="button" class="sym" data-s="tʃ">tʃ</button><button type="button" class="sym" data-s="dʒ">dʒ</button></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var PUBLIC = [{"round": 1, "items": [{"n": 1, "base": "r1-01", "word": "develop"}, {"n": 2, "base": "r1-02", "word": "banana"}, {"n": 3, "base": "r1-03", "word": "honest"}, {"n": 4, "base": "r1-04", "word": "suggest"}, {"n": 5, "base": "r1-05", "word": "colonel"}, {"n": 6, "base": "r1-06", "word": "necessary"}, {"n": 7, "base": "r1-07", "word": "doctor"}, {"n": 8, "base": "r1-08", "word": "salmon"}, {"n": 9, "base": "r1-09", "word": "village"}, {"n": 10, "base": "r1-10", "word": "committee"}, {"n": 11, "base": "r1-11", "word": "protection"}, {"n": 12, "base": "r1-12", "word": "subtle"}, {"n": 13, "base": "r1-13", "word": "chocolate"}, {"n": 14, "base": "r1-14", "word": "thousand"}, {"n": 15, "base": "r1-15", "word": "guarantee"}]}, {"round": 2, "items": [{"n": 1, "base": "r2-01", "word": "problem"}, {"n": 2, "base": "r2-02", "word": "castle"}, {"n": 3, "base": "r2-03", "word": "memorable"}, {"n": 4, "base": "r2-04", "word": "example"}, {"n": 5, "base": "r2-05", "word": "choir"}, {"n": 6, "base": "r2-06", "word": "purpose"}, {"n": 7, "base": "r2-07", "word": "business"}, {"n": 8, "base": "r2-08", "word": "afternoon"}, {"n": 9, "base": "r2-09", "word": "future"}, {"n": 10, "base": "r2-10", "word": "method"}, {"n": 11, "base": "r2-11", "word": "climbing"}, {"n": 12, "base": "r2-12", "word": "receipt"}, {"n": 13, "base": "r2-13", "word": "preference"}, {"n": 14, "base": "r2-14", "word": "breathe"}, {"n": 15, "base": "r2-15", "word": "percentage"}]}];
+  var SECRET_B64 = "W3sicm91bmQiOiAxLCAiaXRlbXMiOiBbeyJhIjogIsuIZGV2yZlsyZlwIiwgImIiOiAiZMmqy4h2ZWzJmXAiLCAidCI6ICJCIiwgInRsIjogInN0cmVzcyBpbiB0aGUgd3Jvbmcgc2VhdCJ9LCB7ImEiOiAiy4hiw6ZuyZluyZkiLCAiYiI6ICJiyZnLiG7JkcuQbsmZIiwgInQiOiAiQiIsICJ0bCI6ICJzdHJlc3MgaW4gdGhlIHdyb25nIHNlYXQifSwgeyJhIjogIsuIaMmSbsmqc3QiLCAiYiI6ICLLiMmSbsmqc3QiLCAidCI6ICJDIiwgInRsIjogInNwZWxsaW5nIHByb251bmNpYXRpb24gKGEgd3JpdHRlbiBsZXR0ZXIvc3lsbGFibGUgc291bmRlZCB0aGF0IHNob3VsZCBub3QgYmUpIn0sIHsiYSI6ICJzyZnLiGdlc3QiLCAiYiI6ICJzyZnLiGTKkmVzdCIsICJ0IjogIkQiLCAidGwiOiAic3dhcHBlZCBzb3VuZCAobWFkZSBpbiB0aGUgd3JvbmcgcGxhY2UgaW4gdGhlIG1vdXRoKSJ9LCB7ImEiOiAiy4hryZzLkG7JmWwiLCAiYiI6ICLLiGvJnMuQbsmZbCIsICJ0IjogIlgiLCAidGwiOiAiY29ycmVjdCDigJQgYmFpdCJ9LCB7ImEiOiAibsmZy4hzZXPJmXLJqiIsICJiIjogIsuIbmVzyZlzyZlyyaoiLCAidCI6ICJCIiwgInRsIjogInN0cmVzcyBpbiB0aGUgd3Jvbmcgc2VhdCJ9LCB7ImEiOiAiy4hkyZJrdMmUy5AiLCAiYiI6ICLLiGTJkmt0yZkiLCAidCI6ICJBIiwgInRsIjogImZ1bGwgY2xlYXIgdm93ZWwgd2hlcmUgYSB3ZWFrIHNjaHdhIGJlbG9uZ3MifSwgeyJhIjogIsuIc8OmbG3JmW4iLCAiYiI6ICLLiHPDpm3JmW4iLCAidCI6ICJDIiwgInRsIjogInNwZWxsaW5nIHByb251bmNpYXRpb24gKGEgd3JpdHRlbiBsZXR0ZXIvc3lsbGFibGUgc291bmRlZCB0aGF0IHNob3VsZCBub3QgYmUpIn0sIHsiYSI6ICJ2yarLiGxlyapkypIiLCAiYiI6ICLLiHbJqmzJqmTKkiIsICJ0IjogIkMiLCAidGwiOiAic3BlbGxpbmcgcHJvbnVuY2lhdGlvbiAoYSB3cml0dGVuIGxldHRlci9zeWxsYWJsZSBzb3VuZGVkIHRoYXQgc2hvdWxkIG5vdCBiZSkifSwgeyJhIjogIsuIa8mSbcmqdMmqIiwgImIiOiAia8mZy4htyap0yaoiLCAidCI6ICJCIiwgInRsIjogInN0cmVzcyBpbiB0aGUgd3Jvbmcgc2VhdCJ9LCB7ImEiOiAicHLJmcuIdGVryoPJlMuQbiIsICJiIjogInByyZnLiHRla8qDyZluIiwgInQiOiAiQSIsICJ0bCI6ICJmdWxsIGNsZWFyIHZvd2VsIHdoZXJlIGEgd2VhayBzY2h3YSBiZWxvbmdzIn0sIHsiYSI6ICLLiHPKjHTJmWwiLCAiYiI6ICLLiHPKjHTJmWwiLCAidCI6ICJYIiwgInRsIjogImNvcnJlY3Qg4oCUIGJhaXQifSwgeyJhIjogIsuIdMqDyZJryZlsyZl0IiwgImIiOiAiy4h0yoPJkmtsyZl0IiwgInQiOiAiQyIsICJ0bCI6ICJzcGVsbGluZyBwcm9udW5jaWF0aW9uIChhIHdyaXR0ZW4gbGV0dGVyL3N5bGxhYmxlIHNvdW5kZWQgdGhhdCBzaG91bGQgbm90IGJlKSJ9LCB7ImEiOiAiy4jOuGHKinrDpm5kIiwgImIiOiAiy4jOuGHKinrJmW5kIiwgInQiOiAiQSIsICJ0bCI6ICJmdWxsIGNsZWFyIHZvd2VsIHdoZXJlIGEgd2VhayBzY2h3YSBiZWxvbmdzIn0sIHsiYSI6ICLLiGfDpnLJmW50yaoiLCAiYiI6ICJnw6ZyyZluy4h0acuQIiwgInQiOiAiQiIsICJ0bCI6ICJzdHJlc3MgaW4gdGhlIHdyb25nIHNlYXQifV19LCB7InJvdW5kIjogMiwgIml0ZW1zIjogW3siYSI6ICLLiHByyZJibGVtIiwgImIiOiAiy4hwcsmSYmzJmW0iLCAidCI6ICJBIiwgInRsIjogImZ1bGwgY2xlYXIgdm93ZWwgd2hlcmUgYSB3ZWFrIHNjaHdhIGJlbG9uZ3MifSwgeyJhIjogIsuIa8mRy5BzdMmZbCIsICJiIjogIsuIa8mRy5BzyZlsIiwgInQiOiAiQyIsICJ0bCI6ICJzcGVsbGluZyBwcm9udW5jaWF0aW9uIChhIHdyaXR0ZW4gbGV0dGVyL3N5bGxhYmxlIHNvdW5kZWQgdGhhdCBzaG91bGQgbm90IGJlKSJ9LCB7ImEiOiAibcmZy4htyZJyyZliyZlsIiwgImIiOiAiy4htZW3JmXLJmWLJmWwiLCAidCI6ICJCIiwgInRsIjogInN0cmVzcyBpbiB0aGUgd3Jvbmcgc2VhdCJ9LCB7ImEiOiAiyapnesmRy5Bty4hwZWwiLCAiYiI6ICLJqmfLiHrJkcuQbXDJmWwiLCAidCI6ICJCIiwgInRsIjogInN0cmVzcyBpbiB0aGUgd3Jvbmcgc2VhdCJ9LCB7ImEiOiAiy4hrd2HJqsmZIiwgImIiOiAiy4hrd2HJqsmZIiwgInQiOiAiWCIsICJ0bCI6ICJjb3JyZWN0IOKAlCBiYWl0In0sIHsiYSI6ICLLiHDJnMuQcMmZyopzIiwgImIiOiAiy4hwyZzLkHDJmXMiLCAidCI6ICJBIiwgInRsIjogImZ1bGwgY2xlYXIgdm93ZWwgd2hlcmUgYSB3ZWFrIHNjaHdhIGJlbG9uZ3MifSwgeyJhIjogIsuIYsmqesmqbmVzIiwgImIiOiAiy4hiyap6bsmZcyIsICJ0IjogIkMiLCAidGwiOiAic3BlbGxpbmcgcHJvbnVuY2lhdGlvbiAoYSB3cml0dGVuIGxldHRlci9zeWxsYWJsZSBzb3VuZGVkIHRoYXQgc2hvdWxkIG5vdCBiZSkifSwgeyJhIjogIsmRy5Bmy4h0yZzLkG51y5BuIiwgImIiOiAiyZHLkGZ0yZnLiG51y5BuIiwgInQiOiAiQiIsICJ0bCI6ICJzdHJlc3MgaW4gdGhlIHdyb25nIHNlYXQifSwgeyJhIjogIsuIZmp1y5B0yZkiLCAiYiI6ICLLiGZqdcuQdMqDyZkiLCAidCI6ICJEIiwgInRsIjogInN3YXBwZWQgc291bmQgKG1hZGUgaW4gdGhlIHdyb25nIHBsYWNlIGluIHRoZSBtb3V0aCkifSwgeyJhIjogIsuIbWXOuMmSZCIsICJiIjogIsuIbWXOuMmZZCIsICJ0IjogIkEiLCAidGwiOiAiZnVsbCBjbGVhciB2b3dlbCB3aGVyZSBhIHdlYWsgc2Nod2EgYmVsb25ncyJ9LCB7ImEiOiAiy4hrbGHJqm1iyarFiyIsICJiIjogIsuIa2xhyaptyarFiyIsICJ0IjogIkMiLCAidGwiOiAic3BlbGxpbmcgcHJvbnVuY2lhdGlvbiAoYSB3cml0dGVuIGxldHRlci9zeWxsYWJsZSBzb3VuZGVkIHRoYXQgc2hvdWxkIG5vdCBiZSkifSwgeyJhIjogInLJqsuIc2nLkHQiLCAiYiI6ICJyyarLiHNpy5B0IiwgInQiOiAiWCIsICJ0bCI6ICJjb3JyZWN0IOKAlCBiYWl0In0sIHsiYSI6ICJwcsmqy4hmyZzLkHLJmW5zIiwgImIiOiAiy4hwcmVmyZlyyZlucyIsICJ0IjogIkIiLCAidGwiOiAic3RyZXNzIGluIHRoZSB3cm9uZyBzZWF0In0sIHsiYSI6ICLLiGJyacuQw7DJmSIsICJiIjogImJyacuQw7AiLCAidCI6ICJDIiwgInRsIjogInNwZWxsaW5nIHByb251bmNpYXRpb24gKGEgd3JpdHRlbiBsZXR0ZXIvc3lsbGFibGUgc291bmRlZCB0aGF0IHNob3VsZCBub3QgYmUpIn0sIHsiYSI6ICLLiHDJnMuQc8mZbnTJqmTKkiIsICJiIjogInDJmcuIc2VudMmqZMqSIiwgInQiOiAiQiIsICJ0bCI6ICJzdHJlc3MgaW4gdGhlIHdyb25nIHNlYXQifV19XQ==";
+  var SECRET = null;
+  var KEY = "engv121-a3-audio-drill-v1";
+
+  function reveal() {
+    if (SECRET) { return SECRET; }
+    var raw = atob(SECRET_B64);
+    var bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) { bytes[i] = raw.charCodeAt(i); }
+    SECRET = JSON.parse(new TextDecoder("utf-8").decode(bytes));
+    return SECRET;
+  }
+
+  var state = { committed: {}, answers: {} };
+  try {
+    var saved = localStorage.getItem(KEY);
+    if (saved) { state = JSON.parse(saved) || state; }
+  } catch (e) { /* blocked storage: carry on without it */ }
+  if (!state.committed) { state.committed = {}; }
+  if (!state.answers) { state.answers = {}; }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* fine */ }
+  }
+
+  var lastBox = null;
+  var audio = new Audio();
+
+  function play(base) {
+    audio.pause();
+    audio.src = base + ".mp3";
+    audio.currentTime = 0;
+    var p = audio.play();
+    if (p && p.catch) { p.catch(function () { /* tap again */ }); }
+  }
+
+  function norm(s) { return (s || "").replace(/[\s\/\[\].]/g, ""); }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) { n.className = cls; }
+    if (text !== undefined) { n.textContent = text; }
+    return n;
+  }
+
+  function memoBlock(sec, item, ans) {
+    var box = el("div", "memo");
+    var rows = [["A, as said", sec.a, ans.a], ["B, correct", sec.b, ans.b]];
+    rows.forEach(function (r) {
+      var row = el("div", "row");
+      row.appendChild(el("span", "k", r[0]));
+      row.appendChild(el("span", "v", "/" + r[1] + "/"));
+      if (norm(r[2]) && norm(r[2]) === norm(r[1])) { row.appendChild(el("span", "tick", "\u2713")); }
+      box.appendChild(row);
+    });
+    box.appendChild(el("div", "type", sec.t === "X" ? "correct, a bait" : "planted: " + sec.tl));
+    var b = el("button", "play mini", "\u25b6 hear the correct form");
+    b.type = "button";
+    b.addEventListener("click", function () { play(item.base + "-key"); });
+    box.appendChild(b);
+    return box;
+  }
+
+  var host = document.getElementById("rounds");
+
+  function exportRound(rd) {
+    var lines = ["ENGV121 A3 audio drill, Round " + rd.round + " answers",
+                 "saved " + new Date().toLocaleString(), ""];
+    rd.items.forEach(function (item) {
+      var ans = state.answers[item.base] || { a: "", b: "" };
+      lines.push(item.n + ". " + item.word);
+      lines.push("   A (as said): " + (ans.a || "(blank)"));
+      lines.push("   B (correct): " + (ans.b || "(blank)"));
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ENGV121-A3-drill-round" + rd.round + "-answers.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  function buildRound(rd, ri) {
+    var locked = !!state.committed["r" + rd.round];
+    host.appendChild(el("h2", "rh", "Round " + rd.round));
+    var card = el("div", "card");
+
+    rd.items.forEach(function (item, ii) {
+      var wrap = el("div", "item");
+      var head = el("div", "head");
+      head.appendChild(el("span", "num", item.n + "."));
+      head.appendChild(el("span", "word", item.word));
+      var pb = el("button", "play", "\u25b6 play");
+      pb.type = "button";
+      pb.addEventListener("click", function () { play(item.base); });
+      head.appendChild(pb);
+      wrap.appendChild(head);
+
+      if (!state.answers[item.base]) { state.answers[item.base] = { a: "", b: "" }; }
+      [["a", "A: what the speaker said (IPA)"],
+       ["b", "B: correct dictionary form (IPA)"]].forEach(function (pair) {
+        var lab = el("label", "f", pair[1]);
+        var inp = el("input", "ipa");
+        inp.type = "text";
+        inp.value = state.answers[item.base][pair[0]] || "";
+        inp.setAttribute("autocapitalize", "off");
+        inp.setAttribute("autocomplete", "off");
+        inp.setAttribute("spellcheck", "false");
+        if (locked) { inp.readOnly = true; }
+        inp.addEventListener("focus", function () { lastBox = inp; });
+        inp.addEventListener("input", function () {
+          state.answers[item.base][pair[0]] = inp.value;
+          save();
+        });
+        lab.appendChild(inp);
+        wrap.appendChild(lab);
+      });
+
+      if (locked) {
+        wrap.appendChild(memoBlock(reveal()[ri].items[ii], item, state.answers[item.base]));
+      }
+      card.appendChild(wrap);
+    });
+
+    var xb = el("button", "export", "\ud83d\udcbe Save my answers so far (for the tutor, no memo)");
+    xb.type = "button";
+    xb.addEventListener("click", function () { exportRound(rd); });
+    card.appendChild(xb);
+
+    var btn = el("button", "commit", "Commit Round " + rd.round + " answers");
+    btn.type = "button";
+    if (locked) {
+      btn.disabled = true;
+      btn.textContent = "Round " + rd.round + " committed";
+      card.appendChild(btn);
+      card.appendChild(el("div", "done", "Memo unlocked. Nothing here changes any more."));
+    } else {
+      btn.addEventListener("click", function () {
+        if (!confirm("Commit Round " + rd.round + "? Your answers lock and the memo opens.")) { return; }
+        var y = card.getBoundingClientRect().top + (window.pageYOffset || 0);
+        state.committed["r" + rd.round] = true;
+        save();
+        render();
+        window.scrollTo(0, Math.max(0, y - 12));
+      });
+      card.appendChild(btn);
+    }
+    host.appendChild(card);
+  }
+
+  function render() {
+    lastBox = null;
+    host.innerHTML = "";
+    PUBLIC.forEach(buildRound);
+  }
+
+  render();
+  save();
+
+  Array.prototype.forEach.call(document.querySelectorAll(".sym"), function (b) {
+    b.addEventListener("mousedown", function (ev) { ev.preventDefault(); });
+    b.addEventListener("click", function () {
+      if (!lastBox || lastBox.readOnly) { return; }
+      var s = b.getAttribute("data-s");
+      var v = lastBox.value;
+      var st = lastBox.selectionStart, en = lastBox.selectionEnd;
+      if (st === null || st === undefined) { st = en = v.length; }
+      lastBox.value = v.slice(0, st) + s + v.slice(en);
+      var pos = st + s.length;
+      lastBox.focus();
+      try { lastBox.setSelectionRange(pos, pos); } catch (e) { /* fine */ }
+      lastBox.dispatchEvent(new Event("input"));
+    });
+  });
+
+  var pt = document.getElementById("palToggle"), pbdy = document.getElementById("palBody");
+  pt.addEventListener("click", function () {
+    pbdy.classList.toggle("hidden");
+    pt.textContent = pbdy.classList.contains("hidden") ? "show" : "hide";
+  });
+}());
+</script>
+</body>
+</html>
